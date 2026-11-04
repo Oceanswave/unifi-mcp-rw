@@ -1,0 +1,66 @@
+# systemd USER unit: ~/.config/systemd/user/unifi-mcp-rw.service
+# Write-enabled UniFi MCP server. The read-only unifi-mcp.service is separate and untouched.
+[Unit]
+Description=UniFi MCP server (write-enabled, guard-railed) on 127.0.0.1:18778
+# No network-online.target: it is a system unit that a user manager cannot
+# order against, and the server opens no upstream connection at startup.
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/unifi-mcp-rw
+# The state dir must exist before the ReadWritePaths= bind mount is set up for
+# ExecStart. "+" runs this one command outside the sandbox (ProtectHome=read-only
+# would otherwise make mkdir fail); "-" on ReadWritePaths tolerates a missing dir
+# while ExecStartPre itself is being set up.
+ExecStartPre=+/usr/bin/mkdir -p -m 0700 %h/.local/state/unifi-mcp-rw
+# /usr/bin/env resolves node from the user manager's PATH; if node comes from
+# nvm or similar, put its absolute path here instead.
+ExecStart=/usr/bin/env node %h/.local/share/unifi-mcp-rw/http-server-rw.cjs
+Restart=on-failure
+RestartSec=5
+# Exit status 2 = configuration or secret-file error: restarting won't help.
+RestartPreventExitStatus=2
+# SIGTERM refuses new writes and drains in-flight requests for up to 35 s.
+TimeoutStopSec=45
+Environment=NODE_ENV=production
+# The reverse proxy's name (e.g. your tailscale serve host); without it only loopback is accepted.
+#Environment=MCP_PUBLIC_HOST=mcp-host.example.ts.net
+# Writes are controlled by "allow_writes" in config.json. To force read-only
+# mode regardless of the config, uncomment:
+#Environment=UNIFI_ALLOW_WRITES=false
+# Write safeguards (README "Write safeguards"). Register only the write tools
+# the README's minimum allowlist (unset = all write tools):
+#Environment=UNIFI_WRITE_TOOLS=unifi_rw_create_wifi_broadcast,unifi_rw_update_wifi_broadcast,unifi_rw_update_network,unifi_rw_create_legacy_firewall_rule,unifi_rw_update_legacy_firewall_rule,unifi_rw_set_fixed_ip,unifi_rw_clear_fixed_ip
+# One JSON line per write tool call. Must be absolute and inside ReadWritePaths:
+#Environment=UNIFI_WRITE_LOG=%h/.local/state/unifi-mcp-rw/write-calls.jsonl
+# WAN-exposure refusals are on unless this is "true"; leave it commented out.
+#Environment=UNIFI_ALLOW_WAN_EXPOSURE=false
+# Extra firewall zone UUIDs to treat as the WAN (adds to firewall_wan_zone_ids):
+#Environment=UNIFI_WAN_ZONE_IDS=00000000-0000-4000-8000-00000000000c
+UMask=0077
+
+# Hardening (some directives need unprivileged user namespaces in user units;
+# check with: systemd-analyze --user security unifi-mcp-rw.service)
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=-%h/.local/state/unifi-mcp-rw
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+# Node's JIT needs W+X pages.
+MemoryDenyWriteExecute=no
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+# IPAddressDeny= is intentionally not used: the service must reach api.ui.com
+# (cloud backend, default) or the UDM (local backend). Key files under %h are
+# readable through ProtectHome=read-only.
+
+[Install]
+WantedBy=default.target

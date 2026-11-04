@@ -1,0 +1,14 @@
+{
+  "backend": "local",
+  "local_host": "192.168.1.1",
+  "site_name": "default",
+  "local_rw_key_file": "~/.config/unifi-connectivity/local-rw-key",
+  "local_tls_cert_sha256": "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
+  "firewall_internal_zone_ids": [
+    "00000000-0000-4000-8000-00000000000a",
+    "00000000-0000-4000-8000-00000000000b"
+  ],
+  "firewall_wan_zone_ids": [
+    "00000000-0000-4000-8000-00000000000c"
+  ]
+}

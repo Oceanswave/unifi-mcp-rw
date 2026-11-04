@@ -1,0 +1,14 @@
+node_modules/
+*.log
+config.json
+config.local.json
+*.key
+*.pem
+*-token
+local-rw-key
+mcp-rw-token
+.env
+cloud-rw-key
+*.tgz
+coverage/
+.DS_Store

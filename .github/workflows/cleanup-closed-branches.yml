@@ -1,0 +1,35 @@
+name: cleanup-closed-branches
+# A merge by auto-merge is done as github-actions with GITHUB_TOKEN: GitHub skips its own delete-on-merge for it and starts
+# no workflow from its closed event. So this sweeps on a schedule too, and deletes the branch of every closed pull request,
+# merged or not, unless an open pull request still uses it (head or base) or it has taken commits since the pull request closed
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: read
+concurrency:
+  group: cleanup-closed-branches
+jobs:
+  sweep:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository   # a fork's token can't delete
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          keep=$(gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate --jq '.[] | .head.ref, .base.ref')
+          keep="$keep"$'\n'$(gh api "repos/$REPO" --jq .default_branch)
+          gh api "repos/$REPO/pulls?state=closed&per_page=100" --paginate \
+            --jq ".[] | select(.head.repo.full_name == \"$REPO\") | [.number, .head.ref, .head.sha] | @tsv" |
+          while IFS=$'\t' read -r n ref sha; do
+            grep -qxF "$ref" <<<"$keep" && continue
+            live=$(gh api "repos/$REPO/git/ref/heads/$ref" --jq .object.sha 2>/dev/null) || continue
+            if [ "$live" != "$sha" ]; then echo "kept $ref: it has moved since #$n closed"; continue; fi
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$ref" && echo "deleted $ref (#$n)"
+          done

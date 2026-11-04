@@ -1,0 +1,31 @@
+{
+  "name": "unifi-mcp-rw",
+  "version": "0.4.0",
+  "description": "Write-enabled, guard-railed UniFi Network MCP server (Site Manager cloud connector or local UDM, API key)",
+  "license": "MIT",
+  "private": true,
+  "main": "http-server-rw.cjs",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "files": [
+    "http-server-rw.cjs",
+    "lib/",
+    "scripts/",
+    "unifi-mcp-rw.service",
+    "config.example.json",
+    "config.local.example.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "start": "node http-server-rw.cjs",
+    "test": "node --test test/*.test.cjs",
+    "check": "for f in http-server-rw.cjs lib/*.cjs scripts/*.cjs test/*.cjs; do node --check \"$f\" || exit 1; done",
+    "probe": "node scripts/probe-classic.cjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

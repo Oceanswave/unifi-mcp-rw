@@ -1,0 +1,32 @@
+{
+  "type": "STANDARD",
+  "id": "7a2e4c90-1d3b-4f6a-8e25-c4b9d0f13a77",
+  "name": "Home",
+  "metadata": {
+    "origin": "USER_DEFINED"
+  },
+  "enabled": true,
+  "network": {
+    "type": "SPECIFIC",
+    "networkId": "3f6c2a10-5b7e-4d2a-9c41-7e8d0a6b1c25"
+  },
+  "securityConfiguration": {
+    "type": "WPA2_PERSONAL",
+    "fastRoamingEnabled": false,
+    "passphrase": "[REDACTED]"
+  },
+  "multicastToUnicastConversionEnabled": false,
+  "clientIsolationEnabled": false,
+  "hideName": false,
+  "uapsdEnabled": false,
+  "channel2gLockedTo6": false,
+  "dtimPeriod2gLockedTo3": false,
+  "broadcastingFrequenciesGHz": [
+    5,
+    2.4
+  ],
+  "bandSteeringEnabled": true,
+  "arpProxyEnabled": false,
+  "bssTransitionEnabled": true,
+  "advertiseDeviceName": false
+}

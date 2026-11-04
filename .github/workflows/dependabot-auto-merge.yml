@@ -1,0 +1,38 @@
+name: Dependabot auto-merge (patch/minor, green CI)
+# Merges a Dependabot PR only after a CI workflow run on its exact head
+# completed successfully, and only for semver patch/minor updates. Majors
+# never auto-merge. Runs on a GitHub-hosted runner.
+on:
+  workflow_run:
+    workflows:
+      - "CI"
+    types: [completed]
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  merge:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.actor.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge if patch/minor and all checks green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list -R "$REPO" --head "$HEAD_BRANCH" --author 'app/dependabot' --json number,headRefOid --jq ".[] | select(.headRefOid==\"$HEAD_SHA\") | .number")
+          [ -n "$pr" ] || { echo "no matching PR"; exit 0; }
+          title=$(gh pr view "$pr" -R "$REPO" --json title --jq .title)
+          # Classify from the PR title "from X to Y" (grouped PRs list each update in the body)
+          body=$(gh pr view "$pr" -R "$REPO" --json body --jq .body)
+          major=0
+          while read -r a b; do
+            [ "${a%%.*}" != "${b%%.*}" ] && major=1
+          done < <(printf '%s\n%s\n' "$title" "$body" | grep -oE 'from v?[0-9][0-9.]* to v?[0-9][0-9.]*' | sed -E 's/from v?([0-9.]+) to v?([0-9.]+)/\1 \2/')
+          [ "$major" = 0 ] || { echo "major update, not auto-merging"; exit 0; }
+          bad=$(gh pr view "$pr" -R "$REPO" --json statusCheckRollup --jq '[.statusCheckRollup[] | select(.workflowName != "Dependabot auto-merge (patch/minor, green CI)") | (.conclusion // .state) | select(. != "SUCCESS" and . != "SKIPPED" and . != "NEUTRAL")] | length')
+          [ "$bad" = 0 ] || { echo "checks not all green ($bad)"; exit 0; }
+          gh pr merge "$pr" -R "$REPO" --squash --match-head-commit "$HEAD_SHA"

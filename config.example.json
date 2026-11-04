@@ -1,0 +1,13 @@
+{
+  "backend": "cloud",
+  "console_id": "942A6FF664C0000000000964970E0000000009E710560000000068A9873F:9999999999",
+  "cloud_rw_key_file": "~/.config/unifi-connectivity/cloud-rw-key",
+  "site_name": "default",
+  "firewall_internal_zone_ids": [
+    "00000000-0000-4000-8000-00000000000a",
+    "00000000-0000-4000-8000-00000000000b"
+  ],
+  "firewall_wan_zone_ids": [
+    "00000000-0000-4000-8000-00000000000c"
+  ]
+}
