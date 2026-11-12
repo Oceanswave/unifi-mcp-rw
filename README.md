@@ -141,7 +141,7 @@ changes.
 
 ## Install
 
-Requires Node.js >=22.23.4. CI tests Node.js 22.23.4 and 24.22.1.
+Requires Node.js >=22.23.4. CI tests Node.js 22.23.5 and 24.22.3.
 
 On the host that runs it:
 
@@ -181,7 +181,7 @@ are refused.
 The last startup line looks like
 
 ```
-unifi-mcp-rw: started version=0.3.0 node=v24.22.1 listen=http://127.0.0.1:18778 public_host=mcp-host.example.ts.net backend=cloud mode=read-only allow_writes_source=default classic=off config=/home/you/.config/unifi-connectivity/config.json console_id=0123…
+unifi-mcp-rw: started version=0.3.0 node=v24.22.3 listen=http://127.0.0.1:18778 public_host=mcp-host.example.ts.net backend=cloud mode=read-only allow_writes_source=default classic=off config=/home/you/.config/unifi-connectivity/config.json console_id=0123…
 ```
 
 In write mode it is preceded by a safeguards line, for example
